@@ -1,0 +1,19 @@
+# 내 맥에서 실행할 때만 쓰는 설정 (3단계에서 로컬 MySQL 접속 정보가 여기에 들어감)
+spring:
+  config:
+    import: optional:file:./secret-local.yml   # 비밀번호 파일 불러오기
+  datasource:
+    url: jdbc:mysql://localhost:3306/board
+    username: board
+    password: ${DB_PASSWORD}                   # secret-local.yml의 값이 들어옴
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.practice.board: debug
