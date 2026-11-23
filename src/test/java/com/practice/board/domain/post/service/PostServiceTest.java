@@ -49,14 +49,21 @@ class PostServiceTest {
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void 글을_수정하면_다시_조회했을_때_수정된_내용이_나온다() {
-        Long id = postService.create(new PostCreateRequest("원래 제목", "원래 내용")).getId();
+        PostResponse created = postService.create(new PostCreateRequest("원래 제목", "원래 내용"));
+        Long id = created.getId();
         try {
-            postService.update(id, new PostUpdateRequest("수정된 제목", "수정된 내용"));
+            PostResponse updated = postService.update(id, new PostUpdateRequest("수정된 제목", "수정된 내용"));
 
             PostResponse found = postService.findById(id);
 
             assertThat(found.getTitle()).isEqualTo("수정된 제목");
             assertThat(found.getContent()).isEqualTo("수정된 내용");
+
+            // 작성일은 그대로, 수정일만 바뀌어야 한다
+            assertThat(found.getCreatedAt()).isEqualTo(created.getCreatedAt());
+            assertThat(found.getUpdatedAt()).isAfter(created.getUpdatedAt());
+            // 수정 API의 응답에도 새 수정일이 담겨야 한다 (flush 누락 버그 방지)
+            assertThat(updated.getUpdatedAt()).isEqualTo(found.getUpdatedAt());
         } finally {
             postService.delete(id);
         }

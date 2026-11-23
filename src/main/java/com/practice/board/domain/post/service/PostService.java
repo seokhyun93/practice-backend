@@ -42,6 +42,7 @@ public class PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
         post.update(request.getTitle(), request.getContent());
+        postRepository.flush();
         return new PostResponse(post);
     }
 
