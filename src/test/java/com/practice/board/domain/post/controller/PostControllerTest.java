@@ -1,6 +1,7 @@
 package com.practice.board.domain.post.controller;
 
 import com.practice.board.domain.post.dto.PostResponse;
+import com.practice.board.domain.post.dto.PostSummaryResponse;
 import com.practice.board.domain.post.entity.Post;
 import com.practice.board.domain.post.service.PostService;
 import com.practice.board.global.exception.BusinessException;
@@ -105,8 +106,8 @@ class PostControllerTest {
     @Test
     void 글_목록을_조회하면_페이지_형식으로_반환한다() throws Exception {
         given(postService.findAll(any(Pageable.class))).willReturn(new PageImpl<>(
-                List.of(new PostResponse(new Post("첫 글", "내용1", "석현")),
-                        new PostResponse(new Post("둘째 글", "내용2", "석현"))),
+                List.of(new PostSummaryResponse(new Post("첫 글", "내용1", "석현"), 3),
+                        new PostSummaryResponse(new Post("둘째 글", "내용2", "석현"), 0)),
                 PageRequest.of(0, 2),
                 5));
 
@@ -114,6 +115,10 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2))
                 .andExpect(jsonPath("$.content[1].title").value("둘째 글"))
+                .andExpect(jsonPath("$.content[0].commentCount").value(3))
+                .andExpect(jsonPath("$.content[1].commentCount").value(0))
+                // 목록에는 본문이 필요 없으므로 내려가지 않아야 한다
+                .andExpect(jsonPath("$.content[0].content").doesNotExist())
                 .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.size").value(2))
                 .andExpect(jsonPath("$.totalElements").value(5))

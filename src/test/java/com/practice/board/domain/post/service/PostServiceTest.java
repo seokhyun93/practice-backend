@@ -5,6 +5,7 @@ import com.practice.board.domain.comment.repository.CommentRepository;
 import com.practice.board.domain.comment.service.CommentService;
 import com.practice.board.domain.post.dto.PostCreateRequest;
 import com.practice.board.domain.post.dto.PostResponse;
+import com.practice.board.domain.post.dto.PostSummaryResponse;
 import com.practice.board.domain.post.dto.PostUpdateRequest;
 import com.practice.board.global.exception.BusinessException;
 import com.practice.board.global.exception.ErrorCode;
@@ -124,11 +125,33 @@ class PostServiceTest {
         Long second = postService.create(new PostCreateRequest("페이지 테스트 2", "내용", "석현")).getId();
         Long third = postService.create(new PostCreateRequest("페이지 테스트 3", "내용", "석현")).getId();
 
-        Page<PostResponse> page = postService.findAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "id")));
+        Page<PostSummaryResponse> page = postService.findAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "id")));
 
         // DB에 원래 있던 글과 상관없이, 방금 쓴 글이 가장 최신이다
         assertThat(page.getContent()).extracting("id").containsExactly(third, second);
         assertThat(page.getSize()).isEqualTo(2);
         assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(3);
+    }
+
+    @Test
+    void 목록을_조회하면_글마다_댓글_수가_담기고_댓글이_없는_글은_0이다() {
+        Long noComment = postService.create(new PostCreateRequest("댓글 없는 글", "내용", "석현")).getId();
+        Long twoComments = postService.create(new PostCreateRequest("댓글 2개 글", "내용", "석현")).getId();
+        commentService.create(twoComments, new CommentCreateRequest("첫 댓글", "민수"));
+        commentService.create(twoComments, new CommentCreateRequest("둘째 댓글", "지영"));
+
+        Page<PostSummaryResponse> page = postService.findAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "id")));
+
+        // 최신순이므로 [댓글 2개 글, 댓글 없는 글]
+        assertThat(page.getContent()).extracting("id").containsExactly(twoComments, noComment);
+        assertThat(page.getContent()).extracting("commentCount").containsExactly(2L, 0L);
+    }
+
+    @Test
+    void 글이_없는_페이지를_조회하면_빈_목록이_나온다() {
+        // id 목록이 비어 "in ()"가 되는 경우에도 에러가 나지 않아야 한다
+        Page<PostSummaryResponse> page = postService.findAll(PageRequest.of(10_000, 10));
+
+        assertThat(page.getContent()).isEmpty();
     }
 }

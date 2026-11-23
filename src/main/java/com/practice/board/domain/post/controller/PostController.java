@@ -2,6 +2,7 @@ package com.practice.board.domain.post.controller;
 
 import com.practice.board.domain.post.dto.PostCreateRequest;
 import com.practice.board.domain.post.dto.PostResponse;
+import com.practice.board.domain.post.dto.PostSummaryResponse;
 import com.practice.board.domain.post.dto.PostUpdateRequest;
 import com.practice.board.domain.post.service.PostService;
 import com.practice.board.global.dto.PageResponse;
@@ -32,7 +33,7 @@ public class PostController {
     }
 
     @GetMapping
-    public PageResponse<PostResponse> findAll(@PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+    public PageResponse<PostSummaryResponse> findAll(@PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         return new PageResponse<>(postService.findAll(pageable));
     }
 
