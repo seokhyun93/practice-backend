@@ -11,6 +11,9 @@ import com.practice.board.global.exception.ErrorCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -113,5 +116,19 @@ class PostServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.POST_NOT_FOUND);
+    }
+
+    @Test
+    void 최신순으로_페이지를_조회하면_가장_최근에_쓴_글이_먼저_나온다() {
+        postService.create(new PostCreateRequest("페이지 테스트 1", "내용", "석현"));
+        Long second = postService.create(new PostCreateRequest("페이지 테스트 2", "내용", "석현")).getId();
+        Long third = postService.create(new PostCreateRequest("페이지 테스트 3", "내용", "석현")).getId();
+
+        Page<PostResponse> page = postService.findAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "id")));
+
+        // DB에 원래 있던 글과 상관없이, 방금 쓴 글이 가장 최신이다
+        assertThat(page.getContent()).extracting("id").containsExactly(third, second);
+        assertThat(page.getSize()).isEqualTo(2);
+        assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(3);
     }
 }

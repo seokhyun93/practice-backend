@@ -1,6 +1,7 @@
 package com.practice.board.global.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -50,5 +51,11 @@ public class GlobalExceptionHandler {
         log.error("예상하지 못한 에러", e);
         ErrorResponse body = new ErrorResponse("INTERNAL_ERROR", "서버 내부 오류가 발생했습니다.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ErrorResponse> handlePropertyReferenceException(PropertyReferenceException e) {
+        ErrorResponse body = new ErrorResponse("INVALID_INPUT", "요청 값이 올바르지 않습니다.");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 }

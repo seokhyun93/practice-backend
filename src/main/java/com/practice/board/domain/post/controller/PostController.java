@@ -4,13 +4,15 @@ import com.practice.board.domain.post.dto.PostCreateRequest;
 import com.practice.board.domain.post.dto.PostResponse;
 import com.practice.board.domain.post.dto.PostUpdateRequest;
 import com.practice.board.domain.post.service.PostService;
+import com.practice.board.global.dto.PageResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/posts")
@@ -30,8 +32,8 @@ public class PostController {
     }
 
     @GetMapping
-    public List<PostResponse> findAll() {
-        return postService.findAll();
+    public PageResponse<PostResponse> findAll(@PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        return new PageResponse<>(postService.findAll(pageable));
     }
 
     @PutMapping("/{id}")

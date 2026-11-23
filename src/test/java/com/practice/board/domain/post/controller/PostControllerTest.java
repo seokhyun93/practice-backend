@@ -6,14 +6,20 @@ import com.practice.board.domain.post.service.PostService;
 import com.practice.board.global.exception.BusinessException;
 import com.practice.board.global.exception.ErrorCode;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -97,15 +103,49 @@ class PostControllerTest {
     }
 
     @Test
-    void 글_목록을_조회하면_배열로_반환한다() throws Exception {
-        given(postService.findAll()).willReturn(List.of(
-                new PostResponse(new Post("첫 글", "내용1", "석현")),
-                new PostResponse(new Post("둘째 글", "내용2", "석현"))));
+    void 글_목록을_조회하면_페이지_형식으로_반환한다() throws Exception {
+        given(postService.findAll(any(Pageable.class))).willReturn(new PageImpl<>(
+                List.of(new PostResponse(new Post("첫 글", "내용1", "석현")),
+                        new PostResponse(new Post("둘째 글", "내용2", "석현"))),
+                PageRequest.of(0, 2),
+                5));
 
-        mockMvc.perform(get("/posts"))
+        mockMvc.perform(get("/posts").param("page", "0").param("size", "2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[1].title").value("둘째 글"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[1].title").value("둘째 글"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(5))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.hasNext").value(true))
+                // Spring 내부 구조(PageImpl)가 그대로 노출되지 않아야 한다
+                .andExpect(jsonPath("$.pageable").doesNotExist());
+    }
+
+    @Test
+    void 페이지_파라미터가_없으면_첫_페이지_10개_최신순으로_조회한다() throws Exception {
+        given(postService.findAll(any(Pageable.class))).willReturn(new PageImpl<>(List.of()));
+
+        mockMvc.perform(get("/posts")).andExpect(status().isOk());
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(postService).findAll(captor.capture());
+        Pageable pageable = captor.getValue();
+        assertThat(pageable.getPageNumber()).isEqualTo(0);
+        assertThat(pageable.getPageSize()).isEqualTo(10);
+        assertThat(pageable.getSort().getOrderFor("id").getDirection()).isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
+    void 페이지_크기는_최대_50으로_제한된다() throws Exception {
+        given(postService.findAll(any(Pageable.class))).willReturn(new PageImpl<>(List.of()));
+
+        mockMvc.perform(get("/posts").param("size", "1000")).andExpect(status().isOk());
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(postService).findAll(captor.capture());
+        assertThat(captor.getValue().getPageSize()).isEqualTo(50);
     }
 
     @Test

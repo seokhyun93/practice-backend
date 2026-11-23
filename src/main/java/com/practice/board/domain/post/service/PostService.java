@@ -9,10 +9,10 @@ import com.practice.board.domain.post.repository.PostRepository;
 import com.practice.board.global.exception.BusinessException;
 import com.practice.board.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -35,8 +35,8 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponse> findAll() {
-        return postRepository.findAll().stream().map(PostResponse::new).toList();
+    public Page<PostResponse> findAll(Pageable pageable) {
+        return postRepository.findAll(pageable).map(PostResponse::new);
     }
 
     @Transactional

@@ -5,3 +5,7 @@ spring:
   profiles:
     # 프로파일을 지정하지 않고 실행하면 local로 동작 (운영 서버는 실행 시 prod를 명시)
     default: local
+  data:
+    web:
+      pageable:
+        max-page-size: 50
