@@ -2,6 +2,7 @@ package com.practice.board.domain.post.service;
 
 import com.practice.board.domain.post.dto.PostCreateRequest;
 import com.practice.board.domain.post.dto.PostResponse;
+import com.practice.board.domain.post.dto.PostUpdateRequest;
 import com.practice.board.domain.post.entity.Post;
 import com.practice.board.domain.post.repository.PostRepository;
 import com.practice.board.global.exception.BusinessException;
@@ -34,5 +35,20 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> findAll() {
         return postRepository.findAll().stream().map(PostResponse::new).toList();
+    }
+
+    @Transactional
+    public PostResponse update(Long id, PostUpdateRequest request) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+        post.update(request.getTitle(), request.getContent());
+        return new PostResponse(post);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+        postRepository.delete(post);
     }
 }

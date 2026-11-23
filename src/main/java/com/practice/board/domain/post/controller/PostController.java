@@ -2,6 +2,7 @@ package com.practice.board.domain.post.controller;
 
 import com.practice.board.domain.post.dto.PostCreateRequest;
 import com.practice.board.domain.post.dto.PostResponse;
+import com.practice.board.domain.post.dto.PostUpdateRequest;
 import com.practice.board.domain.post.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +32,16 @@ public class PostController {
     @GetMapping
     public List<PostResponse> findAll() {
         return postService.findAll();
+    }
+
+    @PutMapping("/{id}")
+    public PostResponse update(@PathVariable Long id, @Valid @RequestBody PostUpdateRequest request) {
+        return postService.update(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        postService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
