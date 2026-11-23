@@ -8,7 +8,7 @@ spring:
     password: ${DB_PASSWORD}                   # secret-local.yml의 값이 들어옴
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
 
 server:
