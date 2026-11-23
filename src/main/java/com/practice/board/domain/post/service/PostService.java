@@ -1,5 +1,6 @@
 package com.practice.board.domain.post.service;
 
+import com.practice.board.domain.comment.repository.CommentRepository;
 import com.practice.board.domain.post.dto.PostCreateRequest;
 import com.practice.board.domain.post.dto.PostResponse;
 import com.practice.board.domain.post.dto.PostUpdateRequest;
@@ -17,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public PostResponse create(PostCreateRequest request) {
@@ -50,6 +52,7 @@ public class PostService {
     public void delete(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+        commentRepository.deleteAllByPostId(id);
         postRepository.delete(post);
     }
 }

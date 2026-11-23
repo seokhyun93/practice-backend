@@ -1,5 +1,8 @@
 package com.practice.board.domain.post.service;
 
+import com.practice.board.domain.comment.dto.CommentCreateRequest;
+import com.practice.board.domain.comment.repository.CommentRepository;
+import com.practice.board.domain.comment.service.CommentService;
 import com.practice.board.domain.post.dto.PostCreateRequest;
 import com.practice.board.domain.post.dto.PostResponse;
 import com.practice.board.domain.post.dto.PostUpdateRequest;
@@ -20,6 +23,12 @@ class PostServiceTest {
 
     @Autowired
     PostService postService;
+
+    @Autowired
+    CommentService commentService;
+
+    @Autowired
+    CommentRepository commentRepository;
 
     @Test
     void 글을_저장하고_다시_조회하면_같은_내용이_나온다() {
@@ -84,6 +93,22 @@ class PostServiceTest {
 
         postService.delete(id);
 
+        assertThatThrownBy(() -> postService.findById(id))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.POST_NOT_FOUND);
+    }
+
+    @Test
+    void 댓글이_있는_글을_삭제하면_댓글도_함께_삭제된다() {
+        Long id = postService.create(new PostCreateRequest("댓글 있는 글", "내용", "석현")).getId();
+        commentService.create(id, new CommentCreateRequest("첫 댓글", "민수"));
+        commentService.create(id, new CommentCreateRequest("둘째 댓글", "지영"));
+
+        // 댓글을 먼저 지우지 않으면 외래 키 때문에 여기서 예외가 난다
+        postService.delete(id);
+
+        assertThat(commentRepository.findAllByPostIdOrderByIdAsc(id)).isEmpty();
         assertThatThrownBy(() -> postService.findById(id))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
