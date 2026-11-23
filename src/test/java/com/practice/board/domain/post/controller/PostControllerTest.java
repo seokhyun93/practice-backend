@@ -40,15 +40,16 @@ class PostControllerTest {
     @Test
     void 글을_작성하면_201과_작성된_글을_반환한다() throws Exception {
         // Given: 가짜 Service가 이 글을 돌려주도록 설정
-        given(postService.create(any())).willReturn(new PostResponse(new Post("첫 글", "안녕하세요")));
+        given(postService.create(any())).willReturn(new PostResponse(new Post("첫 글", "안녕하세요", "석현")));
 
         // When: POST /posts 요청
         mockMvc.perform(post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"첫 글\",\"content\":\"안녕하세요\"}"))
+                        .content("{\"title\":\"첫 글\",\"content\":\"안녕하세요\",\"author\":\"석현\"}"))
                 // Then: 201 + 응답의 title 확인
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.title").value("첫 글"));
+                .andExpect(jsonPath("$.title").value("첫 글"))
+                .andExpect(jsonPath("$.author").value("석현"));
     }
 
     @Test
@@ -56,7 +57,7 @@ class PostControllerTest {
         // When: 제목 없이 요청
         mockMvc.perform(post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"content\":\"안녕하세요\"}"))
+                        .content("{\"content\":\"안녕하세요\",\"author\":\"석현\"}"))
                 // Then: 400 + 우리가 만든 에러 형식
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_INPUT"))
@@ -67,8 +68,19 @@ class PostControllerTest {
     }
 
     @Test
+    void 작성자가_없으면_400과_에러_메시지를_반환한다() throws Exception {
+        mockMvc.perform(post("/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"제목\",\"content\":\"내용\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("작성자는 필수입니다."));
+
+        verify(postService, never()).create(any());
+    }
+
+    @Test
     void 글을_조회하면_200과_글을_반환한다() throws Exception {
-        given(postService.findById(1L)).willReturn(new PostResponse(new Post("첫 글", "안녕하세요")));
+        given(postService.findById(1L)).willReturn(new PostResponse(new Post("첫 글", "안녕하세요", "석현")));
 
         mockMvc.perform(get("/posts/1"))
                 .andExpect(status().isOk())
@@ -87,8 +99,8 @@ class PostControllerTest {
     @Test
     void 글_목록을_조회하면_배열로_반환한다() throws Exception {
         given(postService.findAll()).willReturn(List.of(
-                new PostResponse(new Post("첫 글", "내용1")),
-                new PostResponse(new Post("둘째 글", "내용2"))));
+                new PostResponse(new Post("첫 글", "내용1", "석현")),
+                new PostResponse(new Post("둘째 글", "내용2", "석현"))));
 
         mockMvc.perform(get("/posts"))
                 .andExpect(status().isOk())
@@ -98,7 +110,7 @@ class PostControllerTest {
 
     @Test
     void 글을_수정하면_200과_수정된_글을_반환한다() throws Exception {
-        given(postService.update(eq(1L), any())).willReturn(new PostResponse(new Post("수정된 제목", "수정된 내용")));
+        given(postService.update(eq(1L), any())).willReturn(new PostResponse(new Post("수정된 제목", "수정된 내용", "석현")));
 
         mockMvc.perform(put("/posts/1")
                         .contentType(MediaType.APPLICATION_JSON)

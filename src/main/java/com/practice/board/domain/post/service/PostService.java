@@ -20,7 +20,7 @@ public class PostService {
 
     @Transactional
     public PostResponse create(PostCreateRequest request) {
-        Post post = new Post(request.getTitle(), request.getContent());
+        Post post = new Post(request.getTitle(), request.getContent(), request.getAuthor());
         Post saved = postRepository.save(post);
         return new PostResponse(saved);
     }

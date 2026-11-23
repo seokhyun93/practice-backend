@@ -23,13 +23,14 @@ class PostServiceTest {
 
     @Test
     void 글을_저장하고_다시_조회하면_같은_내용이_나온다() {
-        PostResponse created = postService.create(new PostCreateRequest("통합 테스트 글", "내용"));
+        PostResponse created = postService.create(new PostCreateRequest("통합 테스트 글", "내용", "석현"));
 
         PostResponse found = postService.findById(created.getId());
 
         assertThat(found.getId()).isNotNull();
         assertThat(found.getTitle()).isEqualTo("통합 테스트 글");
         assertThat(found.getContent()).isEqualTo("내용");
+        assertThat(found.getAuthor()).isEqualTo("석현");
     }
 
     @Test
@@ -49,7 +50,7 @@ class PostServiceTest {
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void 글을_수정하면_다시_조회했을_때_수정된_내용이_나온다() {
-        PostResponse created = postService.create(new PostCreateRequest("원래 제목", "원래 내용"));
+        PostResponse created = postService.create(new PostCreateRequest("원래 제목", "원래 내용", "석현"));
         Long id = created.getId();
         try {
             PostResponse updated = postService.update(id, new PostUpdateRequest("수정된 제목", "수정된 내용"));
@@ -79,7 +80,7 @@ class PostServiceTest {
 
     @Test
     void 글을_삭제하면_다시_조회할_때_POST_NOT_FOUND_예외가_발생한다() {
-        Long id = postService.create(new PostCreateRequest("삭제할 글", "내용")).getId();
+        Long id = postService.create(new PostCreateRequest("삭제할 글", "내용", "석현")).getId();
 
         postService.delete(id);
 

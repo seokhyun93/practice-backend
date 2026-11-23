@@ -10,6 +10,7 @@ public class PostResponse {
     private final Long id;
     private final String title;
     private final String content;
+    private final String author;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -17,6 +18,7 @@ public class PostResponse {
         this.id = post.getId();
         this.title = post.getTitle();
         this.content = post.getContent();
+        this.author = post.getAuthor();
         this.createdAt = post.getCreatedAt();    // 추가
         this.updatedAt = post.getUpdatedAt();
     }
