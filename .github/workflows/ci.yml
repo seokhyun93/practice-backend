@@ -19,7 +19,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost"                                                                                                                              
+          --health-cmd="mysqladmin ping -h localhost"
           --health-interval=5s
           --health-retries=10
 
@@ -35,3 +35,18 @@ jobs:
       - run: ./gradlew test
         env:
           DB_PASSWORD: ci-only
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 서버에 접속해서 배포
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 ubuntu@$HOST \
+            'cd practice-backend && git pull && docker compose up -d --build'
