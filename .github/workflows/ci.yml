@@ -3,7 +3,15 @@ name: CI
 on:
   push:
     branches: [ main ]
+    # 문서만 바뀐 push는 테스트·배포를 건너뛴다 (코드가 하나라도 섞이면 실행)
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
 jobs:
   test:
     runs-on: ubuntu-latest
