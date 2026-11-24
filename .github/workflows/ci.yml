@@ -39,8 +39,18 @@ jobs:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ap-southeast-2
+      SG_ID: sg-069ff76e8f2c373db
     steps:
-      - name: 서버에 접속해서 배포
+      - name: 1) GitHub 컴퓨터의 IP 확인
+        run: echo "RUNNER_IP=$(curl -s https://checkip.amazonaws.com)" >> "$GITHUB_ENV"
+      - name: 2) 문지기 명단에 잠깐 추가
+        run: aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port 22 --cidr "$RUNNER_IP/32"
+
+      - name: 3) 서버에 접속해서 배포
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           HOST: ${{ secrets.EC2_HOST }}
@@ -48,5 +58,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 ubuntu@$HOST \
-            'cd practice-backend && git pull && docker compose up -d --build'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30 ubuntu@"$HOST"
+      - name: 4) 문지기 명단에서 삭제 (실패해도 반드시)
+        if: always()
+        run: aws ec2 revoke-security-group-ingress --group-id "$SG_ID" --protocol tcp --port 22 --cidr "$RUNNER_IP/32"
