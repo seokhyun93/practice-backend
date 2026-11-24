@@ -1,6 +1,7 @@
 package com.practice.board.domain.comment.controller;
 
 import com.practice.board.domain.comment.dto.CommentResponse;
+import com.practice.board.domain.comment.dto.RecentCommentResponse;
 import com.practice.board.domain.comment.entity.Comment;
 import com.practice.board.domain.comment.service.CommentService;
 import com.practice.board.domain.post.entity.Post;
@@ -92,5 +93,19 @@ class CommentControllerTest {
         mockMvc.perform(get("/posts/999/comments"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("POST_NOT_FOUND"));
+    }
+
+    @Test
+    void 최근_댓글을_조회하면_글_제목과_함께_배열로_반환한다() throws Exception {
+        given(commentService.findRecent()).willReturn(List.of(
+                new RecentCommentResponse(new Comment(new Post("스프링 질문", "내용", "석현"), "저도 궁금해요", "민수")),
+                new RecentCommentResponse(new Comment(new Post("점심 메뉴", "내용", "지영"), "김치찌개", "석현"))));
+
+        mockMvc.perform(get("/comments/recent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].content").value("저도 궁금해요"))
+                .andExpect(jsonPath("$[0].postTitle").value("스프링 질문"))
+                .andExpect(jsonPath("$[1].postTitle").value("점심 메뉴"));
     }
 }

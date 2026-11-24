@@ -6,11 +6,11 @@ import java.time.LocalDateTime;
 
 @Getter
 public class CommentResponse {
-    private Long id;
-    private Long postId;
-    private String content;
-    private String author;
-    private LocalDateTime createdAt;
+    private final Long id;
+    private final Long postId;
+    private final String content;
+    private final String author;
+    private final LocalDateTime createdAt;
 
     public CommentResponse(Comment comment) {
         this.id = comment.getId();

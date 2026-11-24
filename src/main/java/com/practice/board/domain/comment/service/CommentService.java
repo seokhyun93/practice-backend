@@ -2,6 +2,7 @@ package com.practice.board.domain.comment.service;
 
 import com.practice.board.domain.comment.dto.CommentCreateRequest;
 import com.practice.board.domain.comment.dto.CommentResponse;
+import com.practice.board.domain.comment.dto.RecentCommentResponse;
 import com.practice.board.domain.comment.entity.Comment;
 import com.practice.board.domain.comment.repository.CommentRepository;
 import com.practice.board.domain.post.entity.Post;
@@ -35,6 +36,13 @@ public class CommentService {
         }
         return commentRepository.findAllByPostIdOrderByIdAsc(postId).stream()
                 .map(CommentResponse::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecentCommentResponse> findRecent() {
+        return commentRepository.findRecentWithPost().stream()
+                .map(RecentCommentResponse::new)
                 .toList();
     }
 }

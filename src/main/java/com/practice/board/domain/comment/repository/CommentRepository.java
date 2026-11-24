@@ -18,4 +18,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("select c.post.id as postId, count(c) as count from Comment c " +
             "where c.post.id in :postIds group by c.post.id")
     List<CommentCount> countByPostIds(@Param("postIds") List<Long> postIds);
+
+    @Query("select c from Comment c join fetch c.post order by c.id desc limit 10")
+    List<Comment> findRecentWithPost();
 }
