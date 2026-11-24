@@ -7,6 +7,22 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-only
+          MYSQL_DATABASE: board
+          MYSQL_USER: board
+          MYSQL_PASSWORD: ci-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"                                                                                                                              
+          --health-interval=5s
+          --health-retries=10
+
     steps:
       - uses: actions/checkout@v4
 
@@ -17,3 +33,5 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew test
+        env:
+          DB_PASSWORD: ci-only
