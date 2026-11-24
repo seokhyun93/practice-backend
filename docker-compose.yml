@@ -1,0 +1,30 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: board
+      MYSQL_USER: board
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - board-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/board
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  board-mysql-data:

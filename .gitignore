@@ -38,3 +38,4 @@ out/
 
  ### 비밀 설정 ###
 secret-local.yml
+.env
