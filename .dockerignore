@@ -1,0 +1,6 @@
+.env
+secret-local.yml
+build
+.gradle
+.idea
+.git
